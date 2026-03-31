@@ -1,0 +1,16 @@
+services:
+  sleep_postgres:
+    image: postgres:15-alpine
+    container_name: sleep_db_container
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: sleep_db
+    ports:
+      - "6432:5432" # Explicitly isolated port
+    volumes:
+      - sleep_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  sleep_pgdata:
