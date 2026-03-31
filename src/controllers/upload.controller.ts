@@ -11,47 +11,54 @@ export const handleCsvUpload = async (req: Request, res: Response): Promise<void
     }
 
     const rawCsvPath = req.file.path;
-    const rawScriptPath = path.join(__dirname, '../../ml/predict.py');
-    const rawModelPath = path.join(__dirname, '../../ml/sleep_model.keras');
+    // process.cwd() points to the root of the backend folder, safely ignoring dist/ routing
+    const scriptPath = path.join(process.cwd(), 'ml', 'predict.py');
+    const modelPath = path.join(process.cwd(), 'ml', 'sleep_model.keras');
 
-    // Convert Windows backslashes to forward slashes to prevent Python escape errors
     const csvPath = rawCsvPath.replace(/\\/g, '/');
-    const scriptPath = rawScriptPath.replace(/\\/g, '/');
-    const modelPath = rawModelPath.replace(/\\/g, '/');
+    const safeScriptPath = scriptPath.replace(/\\/g, '/');
+    const safeModelPath = modelPath.replace(/\\/g, '/');
 
-    // CRITICAL FIX: Use local 'python' on Windows, but use the isolated 'venv/bin/python' on Render
+    // Point directly to the root venv
     const pythonCommand = process.platform === 'win32' 
       ? 'python' 
-      : path.join(__dirname, '../../venv/bin/python');
+      : path.join(process.cwd(), 'venv', 'bin', 'python');
 
-    const pythonProcess = spawn(pythonCommand, [scriptPath, modelPath, csvPath]);
+    const pythonProcess = spawn(pythonCommand, [safeScriptPath, safeModelPath, csvPath]);
 
     let rawData = '';
     let errorData = '';
 
-    // Collect standard output
+    // CRITICAL: This catches ENOENT and stops the 502 Bad Gateway server crash
+    pythonProcess.on('error', (err) => {
+      console.error('[SPAWN ERROR] Failed to start Python:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: 'ML Engine failed to boot', 
+          details: err.message 
+        });
+      }
+    });
+
     pythonProcess.stdout.on('data', (chunk) => {
       rawData += chunk.toString();
     });
 
-    // Collect standard error (Stack traces, missing modules)
     pythonProcess.stderr.on('data', (chunk) => {
       errorData += chunk.toString();
     });
 
     pythonProcess.on('close', (code) => {
-      // Clean up the temporary CSV file
-      if (fs.existsSync(csvPath)) {
-        fs.unlinkSync(csvPath);
-      }
+      if (fs.existsSync(csvPath)) fs.unlinkSync(csvPath);
 
-      // If Python crashed (code !== 0), spit the exact error to the client/logs
       if (code !== 0) {
         console.error(`[PYTHON CRASH LOG]:\n${errorData}`);
-        res.status(500).json({ 
-          error: 'Python script execution failed', 
-          details: errorData.trim() || 'No error trace captured. Check Python path.' 
-        });
+        if (!res.headersSent) {
+          res.status(500).json({ 
+            error: 'Python script execution failed', 
+            details: errorData.trim() || 'Check logs' 
+          });
+        }
         return;
       }
 
@@ -64,12 +71,17 @@ export const handleCsvUpload = async (req: Request, res: Response): Promise<void
         res.status(200).json({ data: result });
       } catch (parseError) {
         console.error("Failed to parse Python output:", rawData);
-        res.status(500).json({ error: 'Invalid JSON output from model', rawOutput: rawData });
+        if (!res.headersSent) {
+           res.status(500).json({ error: 'Invalid JSON output from model', rawOutput: rawData });
+        }
       }
     });
 
   } catch (error) {
     console.error("Upload handler error:", error);
-    res.status(500).json({ error: 'Internal server error during processing' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error during processing' });
+    }
   }
 };
+
