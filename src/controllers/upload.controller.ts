@@ -21,9 +21,20 @@ export const handleCsvUpload = async (req: Request, res: Response): Promise<void
 
     // Point directly to the root venv
         // Point straight to the system's native Python instead of a virtual environment
+        // Point to native Python
     const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
 
-    const pythonProcess = spawn(pythonCommand, [safeScriptPath, safeModelPath, csvPath]);
+    // CRITICAL FIX: Tell Python to look in our custom local folder for numpy/tensorflow
+    const pythonEnv = {
+      ...process.env,
+      PYTHONPATH: path.join(process.cwd(), '.pip_modules')
+    };
+
+    // Pass the custom environment to the spawned process
+    const pythonProcess = spawn(pythonCommand, [safeScriptPath, safeModelPath, csvPath], {
+      env: pythonEnv
+    });
+
 
 
     let rawData = '';

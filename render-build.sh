@@ -8,8 +8,7 @@ npm install
 echo "Compiling TypeScript..."
 npm run build
 
-echo "Installing Python ML Libraries directly to the Render container..."
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
+echo "Installing Python ML Libraries locally into .pip_modules..."
+pip3 install -t .pip_modules -r requirements.txt
 
 echo "Build complete."
