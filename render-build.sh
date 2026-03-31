@@ -8,13 +8,8 @@ npm install
 echo "Compiling TypeScript..."
 npm run build
 
-echo "Setting up Python Virtual Environment..."
-# Create a local virtual environment named 'venv'
-python3 -m venv venv
-
-# Activate it and install the exact ML libraries
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+echo "Installing Python ML Libraries directly to the Render container..."
+pip3 install --upgrade pip
+pip3 install -r requirements.txt
 
 echo "Build complete."

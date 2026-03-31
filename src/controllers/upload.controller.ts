@@ -20,11 +20,11 @@ export const handleCsvUpload = async (req: Request, res: Response): Promise<void
     const safeModelPath = modelPath.replace(/\\/g, '/');
 
     // Point directly to the root venv
-    const pythonCommand = process.platform === 'win32' 
-      ? 'python' 
-      : path.join(process.cwd(), 'venv', 'bin', 'python');
+        // Point straight to the system's native Python instead of a virtual environment
+    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
 
     const pythonProcess = spawn(pythonCommand, [safeScriptPath, safeModelPath, csvPath]);
+
 
     let rawData = '';
     let errorData = '';
