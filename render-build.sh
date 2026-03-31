@@ -8,7 +8,8 @@ npm install
 echo "Compiling TypeScript..."
 npm run build
 
-echo "Installing Python ML Libraries locally into .pip_modules..."
-pip3 install -t .pip_modules -r requirements.txt
+echo "Installing Python ML Libraries securely to the persistent user profile..."
+pip3 install --user --upgrade pip
+pip3 install --user -r requirements.txt
 
 echo "Build complete."
