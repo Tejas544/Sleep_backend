@@ -2,14 +2,21 @@
 # Exit immediately if a command fails
 set -o errexit
 
+echo "Cleaning up any corrupted caches..."
+rm -rf node_modules
+
 echo "Installing Node dependencies..."
 npm install
 
-echo "Compiling TypeScript..."
-npm run build
+echo "Generating Prisma Client..."
+npx prisma generate
 
-echo "Installing ML libraries directly into the project code..."
-# This forces the packages into the ml/libs folder so Render cannot delete them
-pip3 install -t ml/libs -r requirements.txt
+echo "Compiling TypeScript..."
+npx tsc
+
+echo "Installing Python ML dependencies globally..."
+# Force pip to use the exact python3 environment Render uses
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements.txt
 
 echo "Build complete."
