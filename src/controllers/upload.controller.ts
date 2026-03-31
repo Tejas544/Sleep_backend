@@ -10,15 +10,24 @@ export const handleCsvUpload = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const csvPath = req.file.path;
-    const scriptPath = path.join(__dirname, '../../ml/predict.py');
-    const modelPath = path.join(__dirname, '../../ml/sleep_model.keras');
+    const rawCsvPath = req.file.path;
+    const rawScriptPath = path.join(__dirname, '../../ml/predict.py');
+    const rawModelPath = path.join(__dirname, '../../ml/sleep_model.keras');
 
-    const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+    // Convert Windows backslashes to forward slashes to prevent Python escape errors
+    const csvPath = rawCsvPath.replace(/\\/g, '/');
+    const scriptPath = rawScriptPath.replace(/\\/g, '/');
+    const modelPath = rawModelPath.replace(/\\/g, '/');
+
+    // CRITICAL FIX: Use local 'python' on Windows, but use the isolated 'venv/bin/python' on Render
+    const pythonCommand = process.platform === 'win32' 
+      ? 'python' 
+      : path.join(__dirname, '../../venv/bin/python');
+
     const pythonProcess = spawn(pythonCommand, [scriptPath, modelPath, csvPath]);
 
     let rawData = '';
-    let errorData = ''; // CRITICAL: This captures the actual Python crash log
+    let errorData = '';
 
     // Collect standard output
     pythonProcess.stdout.on('data', (chunk) => {
@@ -36,7 +45,7 @@ export const handleCsvUpload = async (req: Request, res: Response): Promise<void
         fs.unlinkSync(csvPath);
       }
 
-      // If Python crashed (code !== 0), spit the exact error into Postman
+      // If Python crashed (code !== 0), spit the exact error to the client/logs
       if (code !== 0) {
         console.error(`[PYTHON CRASH LOG]:\n${errorData}`);
         res.status(500).json({ 
