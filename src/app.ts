@@ -6,7 +6,7 @@ import authRoutes from './routes/auth.routes';
 import patientRoutes from './routes/patient.routes';
 import reportRoutes from './routes/report.routes';
 import paymentRoutes from './routes/payment.routes';
-
+import uploadRoutes from './routes/upload.routes'
 const app = express();
 
 // Security & Utility Middlewares
@@ -40,5 +40,6 @@ app.get('/health', (req, res) => {
 app.use('/api/patients', patientRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/upload', uploadRoutes);
 
 export default app;
