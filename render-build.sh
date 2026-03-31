@@ -8,8 +8,8 @@ npm install
 echo "Compiling TypeScript..."
 npm run build
 
-echo "Installing Python ML Libraries securely to the persistent user profile..."
-pip3 install --user --upgrade pip
-pip3 install --user -r requirements.txt
+echo "Installing ML libraries directly into the project code..."
+# This forces the packages into the ml/libs folder so Render cannot delete them
+pip3 install -t ml/libs -r requirements.txt
 
 echo "Build complete."

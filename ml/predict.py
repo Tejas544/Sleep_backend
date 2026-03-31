@@ -1,16 +1,24 @@
 import sys
-import json
 import os
+import json 
+# THE BULLETPROOF FIX: Force Python to load modules from our local 'libs' folder
+current_dir = os.path.dirname(os.path.abspath(__file__))
+libs_path = os.path.join(current_dir, 'libs')
+sys.path.insert(0, libs_path)
 
-# 1. COMPLETELY MUTE TENSORFLOW SPAM BEFORE IMPORTING
+# Mute TensorFlow spam
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
+# NOW we import the ML libraries securely
 import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model
+import json
 
 def main():
+# ... (Keep the rest of your predict.py code exactly the same below this)
+
     if len(sys.argv) < 3:
         print(json.dumps({"success": False, "error": "Missing arguments. Usage: predict.py <model_path> <csv_path>"}))
         sys.exit(0)
