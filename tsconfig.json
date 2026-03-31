@@ -5,7 +5,6 @@
     
     /* Modules */
     "module": "CommonJS",
-    "moduleResolution": "node",
     "rootDir": "./src",
     "outDir": "./dist",
     
@@ -13,7 +12,6 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "5.0",
     /* Type Checking */
     "strict": true,
     "skipLibCheck": true
